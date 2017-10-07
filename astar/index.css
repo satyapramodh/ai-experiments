@@ -1,0 +1,18 @@
+body{
+  /* margin: 0; */
+}
+
+.map, .settings{
+  width: 50%;
+  display: block;
+  float: left;
+}
+
+.settings{
+  margin-top: 50px;
+}
+
+canvas{
+  margin: 10px auto;
+  width: 400px;
+}
