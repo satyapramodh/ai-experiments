@@ -6,8 +6,9 @@ var game = {
       elementWidth: options.elementWidth || 1,
       elementHeight: options.elementHeight || 1,
       map: options.map || {
-        width: 400,
-        height: 400,
+        width: 50,
+        height: 50,
+        scale: 8,
         color: "#7CB342"
       },
       player: options.player || {
@@ -17,10 +18,13 @@ var game = {
       },
       wall: options.wall || {
         color: "#5D4037"
+      },
+      goal: options.goal || {
+        color: "#F4511E"
       }
     }
 
-    this.options.mode = "generate";
+    this.options.mode = "none";
     this.walls = [];
     // generate map
     this.generateMap(this.options.map)
@@ -31,12 +35,10 @@ var game = {
 
     // set listeners
     $(this.canvas).on("mousedown", function(){
-      if(game.options.mode == "generate")
-        game.options.generateWallMode = true;
+      game.options.mousePress = true;
     });
     $(this.canvas).on("mouseup", function () {
-      if(game.options.mode == "generate")
-        game.options.generateWallMode = false;
+      game.options.mousePress = false;
     });
     $(this.canvas).on("mousemove", this.onClickEvent);
   },
@@ -45,9 +47,10 @@ var game = {
   },
   setWall: function (x, y) {
     // TODO: check if the vertex is correct
-    this.walls.push([x, y]);
+    pos = getScaledPos(pos, game.options.map.scale);
+    this.walls.push([pos.x, pos.y]);
     this.context.fillStyle = this.options.wall.color;
-    this.context.fillRect(x, y, this.options.elementWidth, this.options.elementHeight);
+    this.context.fillRect(pos.x, pos.y, this.options.elementWidth, this.options.elementHeight);
   },
   generateWalls: function (optns = {}) {
     this.context.fillStyle = optns.color;
@@ -60,25 +63,36 @@ var game = {
     this.context.fillRect(optns.x, optns.y, this.options.elementWidth, this.options.elementHeight);
   },
   generateMap: function (optns = {}) {
-    this.canvas.width = optns.width;
-    this.canvas.height = optns.height;
+    this.canvas.width = optns.width * optns.scale;
+    this.canvas.height = optns.height * optns.scale;
     this.context = this.canvas.getContext("2d");
-    this.context.scale(8,8)
+    this.context.scale(optns.scale, optns.scale)
     this.context.fillStyle = optns.color;
-    this.context.fillRect(0, 0, optns.width, optns.height)
+    this.context.fillRect(0, 0, optns.width * optns.scale, optns.height * optns.scale)
     $(".map").prepend(this.canvas);
   },
   start: function (options = {}) {
     this.init(options);
   },
   stop: function () { },
+  setGoal: function(pos = {}){
+    pos = getScaledPos(pos, game.options.map.scale);
+    this.goal = [pos.x, pos.y];
+    this.context.fillStyle = this.options.goal.color;
+    this.context.fillRect(pos.x, pos.y, this.options.elementWidth, this.options.elementHeight);
+  },
   onClickEvent: function (e) {
     // scaling ref: http://devlog.disco.zone/2016/07/22/canvas-scaling/
-    if (game.options.generateWallMode){
-      pos = game.canvas.relMouseCoords(e);
-      console.log(pos);
-      game.setWall(Math.round(pos.x / 8), Math.round(pos.y / 8));
+    pos = game.canvas.relMouseCoords(e);
+    console.log(pos);
+    if (game.options.mode == "generate") {
+      if(game.options.mousePress)
+        game.setWall(pos.x, pos.y);
+    } else{
+      if (game.options.mousePress)
+        game.setGoal(pos);
     }
+
   }
 }
 
