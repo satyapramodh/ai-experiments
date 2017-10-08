@@ -15,7 +15,7 @@ var game = {
       },
       player: options.player || {
         x: 0,
-        y: 95,
+        y: 0,
         color: "#4527A0"
       },
       wall: options.wall || {
@@ -23,8 +23,6 @@ var game = {
       },
       goal: options.goal || {
         color: "#F4511E",
-        x: 99,
-        y: 99
       }
     }
 
@@ -60,7 +58,7 @@ var game = {
   },
   setGoal: function (pos = {}) {
     pos = getScaledPos(pos, game.options.map.scale);
-    this.goal = [pos.x, pos.y];
+    this.options.goal = {x: pos.x, y: pos.y};
     this.context.fillStyle = this.options.goal.color;
     this.context.fillRect(pos.x, pos.y, this.options.elementWidth*this.options.map.scale, this.options.elementHeight*this.options.map.scale);
   },
@@ -101,9 +99,9 @@ var game = {
     }
 
   },
-  nextMoves: function(){
+  nextMoves: function(player = {}){
     next = [];
-    p = this.options.player;
+    p = player || this.options.player;
     for(i = -1; i < 2; i++){
       if ((p.x + i < 0) || (p.x + i) > this.options.map.width){
         continue;
@@ -116,9 +114,46 @@ var game = {
       if ((p.y + 1) <= this.options.map.height)
         next.push([p.x + i, p.y + 1])
     }
+    next = _.reject(next, function(move){
+      return _.find(this.walls, function(wall){
+        return (wall[0] == move[0] && wall[1] == move[1]);
+      })
+    });
+    console.log("next", next);
     return next;
   },
-  getPath: function(){
+  getPath: function(type){
+    eval("this."+type)();
+  },
+  dfs: function(){
+    console.log("dfs")
+    debugger
+    if (!game.options.goal && !game.options.goal.x){
+      game.setGoal([95,95])
+    }
+    visited = [];
+    game.stack.push([game.options.player.x, game.options.player.y]);
+
+    while(game.stack.length != 0){
+      current = game.stack.pop();
+
+      if (current[0] == game.options.goal.x && current[1] == game.options.goal.y){
+        console.log("traverse", game.stack);
+        return game.stack;
+      }
+      else {
+        exists = _.find(visited, function(a){
+          return (a[0] == current[0] && a[1] == current[1])
+        })
+        if(!exists){
+          visited.push(current);
+
+          _.each(game.nextMoves({ x: current[0], y: current[1] }), function(a){
+            game.stack.push(a);
+          })
+        }
+      }
+    }
 
   }
 }
