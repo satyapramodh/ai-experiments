@@ -19,9 +19,10 @@ var relMouseCoords = function(event){
 }
 
 var getScaledPos = function(pos, scale){
-  pos.x = Math.round(pos.x / scale);
-  pos.y = Math.round(pos.y / scale);
-  return pos;
+  return {
+    x: Math.floor(pos.x / scale),
+    y: Math.floor(pos.y / scale)
+  };
 }
 
 HTMLCanvasElement.prototype.relMouseCoords = relMouseCoords;
